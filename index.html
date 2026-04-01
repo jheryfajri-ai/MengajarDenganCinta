@@ -251,7 +251,7 @@
     <div id="printTemplate" class="hidden print-only bg-white p-8"></div>
 
     <script type="module">
-        import { GoogleGenAI, Type } from "@google/genai";
+        import { GoogleGenAI, Type } from "https://esm.run/@google/genai";
 
         // --- DATA & CONSTANTS ---
         const MODELS = [
@@ -340,6 +340,13 @@
         }
 
         // --- VALIDATION ---
+        form.addEventListener('blur', (e) => {
+            if (e.target.hasAttribute('required') || e.target.name === 'dimensi' || e.target.name === 'temaKbc') {
+                e.target.dataset.touched = "true";
+                validateForm();
+            }
+        }, true);
+
         form.addEventListener('input', validateForm);
         form.addEventListener('change', validateForm);
 
@@ -350,9 +357,11 @@
             const requireds = form.querySelectorAll('[required]');
             requireds.forEach(input => {
                 const error = input.nextElementSibling;
+                const isTouched = input.dataset.touched === "true";
+                
                 if (!input.value.trim()) {
                     isValid = false;
-                    if (input.dataset.touched) {
+                    if (isTouched) {
                         input.classList.add('input-error');
                         if (error && error.classList.contains('error-msg')) error.style.display = 'block';
                     }
@@ -360,7 +369,6 @@
                     input.classList.remove('input-error');
                     if (error && error.classList.contains('error-msg')) error.style.display = 'none';
                 }
-                input.dataset.touched = "true";
             });
 
             // Checkboxes (Dimensi & Tema)
@@ -368,7 +376,7 @@
             const dimensiError = document.getElementById('dimensiError');
             if (dimensiChecks.length === 0) {
                 isValid = false;
-                dimensiError.style.display = 'block';
+                if (form.dataset.submitted) dimensiError.style.display = 'block';
             } else {
                 dimensiError.style.display = 'none';
             }
@@ -377,7 +385,7 @@
             const temaError = document.getElementById('temaKbcError');
             if (temaChecks.length === 0) {
                 isValid = false;
-                temaError.style.display = 'block';
+                if (form.dataset.submitted) temaError.style.display = 'block';
             } else {
                 temaError.style.display = 'none';
             }
@@ -414,7 +422,8 @@
             `;
 
             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                const apiKey = typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '';
+                const ai = new GoogleGenAI({ apiKey });
                 const prompt = `
                     Tugas: Buatkan konten spesifik untuk RPPM (Rencana Pelaksanaan Pembelajaran Mendalam) berdasarkan data berikut.
                     
@@ -1128,8 +1137,18 @@
             form.nipGuru.value = "19900327 201903 2 018";
             form.namaKepsek.value = "Ambe Emme, S.Pd., M.Pd.";
             form.nipKepsek.value = "19700625 200901 1 006";
+            
             form.jenjang.value = "SD/MI";
-            jenjangSelect.dispatchEvent(new Event('change'));
+            // Populate kelas options first
+            const jenjang = "SD/MI";
+            kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+            KELAS_MAP[jenjang].forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = k;
+                kelasSelect.appendChild(opt);
+            });
+            
             form.kelas.value = "5";
             form.tahunPelajaran.value = "2025/2026";
             form.mapel.value = "IPAS";
@@ -1137,7 +1156,7 @@
             form.tp.value = "Melalui pengamatan, peserta didik mampu menyusun jaring-jaring makanan dan menjelaskan peran setiap komponen dengan penuh rasa cinta lingkungan.";
             form.materi.value = "Ekosistem, Rantai Makanan, Jaring-jaring Makanan, Keseimbangan Alam";
             form.jumlahPertemuan.value = "2";
-            jmlPertemuanInput.dispatchEvent(new Event('input'));
+            updatePedagogiRows(2);
             form.durasi.value = "2 x 35 menit";
             
             // Checkboxes
@@ -1152,6 +1171,10 @@
             
             form.insersi.value = "Adab pada alam dan makhluk hidup";
             form.konteks.value = "Komunitas Lingkungan Hijau";
+            
+            // Mark all as touched to enable button
+            form.querySelectorAll('[required]').forEach(input => input.dataset.touched = "true");
+            form.dataset.submitted = "true";
             
             validateForm();
         });
@@ -1333,7 +1356,8 @@
             `;
 
             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                const apiKey = typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '';
+                const ai = new GoogleGenAI({ apiKey });
 
                 const prompt = `
                     Tugas: Buatkan 1-2 Tujuan Pembelajaran (TP) yang komprehensif.
