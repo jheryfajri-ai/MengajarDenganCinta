@@ -425,14 +425,15 @@
                     - Capaian Pembelajaran: ${data.cp}
                     - Tujuan Pembelajaran: ${data.tp}
                     
-                    Mohon buatkan konten untuk 7 bagian berikut:
+                    Mohon buatkan konten untuk 8 bagian berikut:
                     1. kemitraan: (String) Bagaimana orang tua/wali terlibat dalam pembelajaran materi ini di rumah secara konkret.
                     2. lingkungan: (HTML String - list <ul> dengan class "list-none space-y-1") Pengaturan ruang fisik, virtual, dan budaya belajar yang mendukung materi ini. Gunakan <strong> untuk label sub-bagian.
-                    3. digital: (HTML String - list <ul> dengan class "list-none space-y-1") Alat digital spesifik (seperti Youtube, Canva, Quizizz, dll) dan kegunaannya yang relevan untuk materi ini.
+                    3. digital: (HTML String - list <ul> with class "list-none space-y-1") Alat digital spesifik (seperti Youtube, Canva, Quizizz, dll) dan kegunaannya yang relevan untuk materi ini.
                     4. asesmen: (Object) { awal: string, proses: string, akhir: string } yang relevan dengan materi ini.
-                    5. profilSiswa: (HTML String - list <ul> dengan class "list-disc ml-4 space-y-2") Profil murid yang relevan dengan materi ini, meliputi Kesiapan Kognitif, Pengetahuan Awal, Minat, dan Kebutuhan Belajar. Gunakan <strong> untuk label sub-bagian.
-                    6. keterampilanProses: (HTML String - list <ol> dengan class "list-decimal ml-4 text-sm") Keterampilan proses yang spesifik dan relevan dengan Capaian Pembelajaran (CP) yang diinputkan.
-                    7. lintasDisiplin: (HTML String - list <ul> dengan class "list-disc ml-4 space-y-1") Keterkaitan materi ini dengan disiplin ilmu lain (seperti Bahasa Indonesia, Matematika, Seni, dll) yang relevan dengan CP. Gunakan <strong> untuk label mata pelajaran.
+                    5. profilSiswa: (HTML String - list <ul> with class "list-disc ml-4 space-y-2") Profil murid yang relevan dengan materi ini, meliputi Kesiapan Kognitif, Pengetahuan Awal, Minat, dan Kebutuhan Belajar. Gunakan <strong> untuk label sub-bagian.
+                    6. keterampilanProses: (HTML String - list <ol> with class "list-decimal ml-4 text-sm") Keterampilan proses yang spesifik dan relevan dengan Capaian Pembelajaran (CP) yang diinputkan.
+                    7. lintasDisiplin: (HTML String - list <ul> with class "list-disc ml-4 space-y-1") Keterkaitan materi ini dengan disiplin ilmu lain (seperti Bahasa Indonesia, Matematika, Seni, dll) yang relevan dengan CP. Gunakan <strong> untuk label mata pelajaran.
+                    8. bahanAjar: (Object) { pengertian: string, jenis: string, contoh: string } Penjelasan materi yang mendalam meliputi pengertian, jenis-jenis/klasifikasi, dan contoh nyata/ilustrasi (seperti jaring makanan jika relevan dengan materi).
                     
                     PENTING: Jangan sertakan teks di dalam kurung ( ) pada semua jawaban Anda agar hasil lebih bersih.
                 `;
@@ -459,9 +460,18 @@
                                 },
                                 profilSiswa: { type: Type.STRING },
                                 keterampilanProses: { type: Type.STRING },
-                                lintasDisiplin: { type: Type.STRING }
+                                lintasDisiplin: { type: Type.STRING },
+                                bahanAjar: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        pengertian: { type: Type.STRING },
+                                        jenis: { type: Type.STRING },
+                                        contoh: { type: Type.STRING }
+                                    },
+                                    required: ["pengertian", "jenis", "contoh"]
+                                }
                             },
-                            required: ["kemitraan", "lingkungan", "digital", "asesmen", "profilSiswa", "keterampilanProses", "lintasDisiplin"]
+                            required: ["kemitraan", "lingkungan", "digital", "asesmen", "profilSiswa", "keterampilanProses", "lintasDisiplin", "bahanAjar"]
                         }
                     }
                 });
@@ -917,16 +927,40 @@
 
         function generateBahanAjar(data) {
             const subtopiks = data.materi.split(/[\n,]/).map(s => s.trim()).filter(s => s);
+            
+            let aiBahanAjar = "";
+            if (data.aiContent && data.aiContent.bahanAjar) {
+                const ba = data.aiContent.bahanAjar;
+                aiBahanAjar = `
+                    <div class="space-y-4 mb-6">
+                        <div class="p-4 border border-black bg-emerald-50">
+                            <h4 class="font-bold mb-2 uppercase">A. Pengertian & Konsep Dasar</h4>
+                            <p class="justified">${ba.pengertian}</p>
+                        </div>
+                        <div class="p-4 border border-black bg-blue-50">
+                            <h4 class="font-bold mb-2 uppercase">B. Jenis / Klasifikasi</h4>
+                            <p class="justified">${ba.jenis}</p>
+                        </div>
+                        <div class="p-4 border border-black bg-yellow-50">
+                            <h4 class="font-bold mb-2 uppercase">C. Contoh & Ilustrasi Nyata</h4>
+                            <p class="justified">${ba.contoh}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="space-y-6 text-sm justified">
+                    ${aiBahanAjar}
+                    
                     <div class="p-4 border-2 border-black rounded-lg bg-slate-50">
-                        <h4 class="font-bold mb-2 uppercase">Pengantar Materi</h4>
+                        <h4 class="font-bold mb-2 uppercase">Ringkasan Materi</h4>
                         <p>Pembelajaran kali ini berfokus pada <strong>${data.materi}</strong>. Melalui materi ini, kita akan mengeksplorasi bagaimana komponen-komponen dalam sistem ini saling berinteraksi dan memberikan dampak bagi kehidupan kita sehari-hari.</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="p-4 border border-black">
-                            <h4 class="font-bold mb-2">Konsep Utama</h4>
+                            <h4 class="font-bold mb-2">Poin Penting</h4>
                             <ul class="list-disc ml-4 space-y-1">
                                 ${subtopiks.map(s => `<li>${s}</li>`).join('')}
                             </ul>
@@ -935,11 +969,6 @@
                             <h4 class="font-bold mb-2">Pesan KBC (Kurikulum Berbasis Cinta)</h4>
                             <p class="italic">"Setiap ilmu yang kita pelajari adalah bentuk rasa syukur kita kepada Tuhan. Dengan memahami ${subtopiks[0] || 'materi ini'}, kita belajar untuk lebih mencintai diri, sesama, dan lingkungan kita."</p>
                         </div>
-                    </div>
-
-                    <div class="p-4 border-2 border-dashed border-black">
-                        <h4 class="font-bold mb-2 uppercase">Informasi Penting</h4>
-                        <p>Peserta didik diharapkan dapat mengidentifikasi elemen-elemen kunci, memahami fungsinya, dan mampu mengomunikasikan pemahaman tersebut dengan bahasa yang santun dan runtut.</p>
                     </div>
                 </div>
             `;
